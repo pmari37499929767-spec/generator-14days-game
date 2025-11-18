@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Честный генератор продаж — мини-игра</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .app {
+      max-width: 720px;
+      width: 100%;
+      background: #020617;
+      border-radius: 18px;
+      padding: 24px 20px 20px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.6);
+      border: 1px solid #1e293b;
+    }
+    @media (min-width: 640px) {
+      .app {
+        padding: 28px 28px 24px;
+      }
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 6px;
+      color: #f9fafb;
+    }
+    .subtitle {
+      margin: 0 0 16px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(8,47,73,0.9);
+      color: #38bdf8;
+      margin-bottom: 10px;
+    }
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #020617;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #111827;
+      margin-bottom: 18px;
+    }
+    .progress {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #22c55e, #a3e635, #facc15);
+      transition: width 0.25s ease-out;
+    }
+    .step {
+      display: none;
+    }
+    .step.active {
+      display: block;
+    }
+    .question-title {
+      font-size: 16px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .question-hint {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 14px;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .option {
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      padding: 8px 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: pointer;
+      background: #020617;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.08s ease;
+    }
+    .option:hover {
+      border-color: #4b5563;
+      transform: translateY(-1px);
+    }
+    .option input {
+      margin-top: 3px;
+    }
+    .option-label {
+      font-size: 14px;
+      color: #e5e7eb;
+    }
+    .option-desc {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 90px;
+      resize: vertical;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      color: #e5e7eb;
+      font-family: inherit;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    textarea:focus,
+    input:focus {
+      outline: none;
+      border-color: #38bdf8;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 18px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #22c55e, #a3e635);
+      color: #0f172a;
+      font-weight: 600;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #9ca3af;
+      border: 1px solid #374151;
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .step-counter {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .error {
+      font-size: 12px;
+      color: #f97373;
+      margin-top: 2px;
+    }
+    .result-block {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+    }
+    .result-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .result-text {
+      font-size: 13px;
+      color: #e5e7eb;
+      margin-bottom: 6px;
+    }
+    .result-tagline {
+      font-size: 12px;
+      color: #a3e635;
+    }
+    .result-note {
+      font-size: 12px;
+      color: #9ca3af;
+      margin: 4px 0 8px;
+    }
+    .copy-block label {
+      font-size: 12px;
+      color: #9ca3af;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .copy-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .copy-row button {
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+    .small {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+    .link-cta {
+      text-decoration: none;
+      color: inherit;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Генератор продаж без глянца
+    </div>
+    <h1>Мини-игра: честный старт для продаж</h1>
+    <p class="subtitle">
+      За 3 минуты поймёте, где вы застряли: в продукте, в смыслах или в ожидании чуда. Без «распакуем твою богиню».
+    </p>
+
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- ШАГ 1 -->
+    <div class="step active" data-step="0">
+      <div class="question-title">1. Что у вас сейчас с продуктом?</div>
+      <div class="question-hint">Выберите формулировку, которая ближе всего к реальности — не к тому, как «надо».</div>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="stage" value="no_product">
+          <div>
+            <div class="option-label">Я всё ещё «ищу себя»</div>
+            <div class="option-desc">Есть опыт и навыки, но нет чёткого формата продукта, который хочется продавать.</div>
+          </div>
+        </label>
+        <label class="option">
+          <input type="radio" name="stage" value="has_product_no_sales">
+          <div>
+            <div class="option-label">Продукт есть, но он почти не продаётся</div>
+            <div class="option-desc">Люди не очень понимают, что я делаю и чем им это помогает.</div>
+          </div>
+        </label>
+        <label class="option">
+          <input type="radio" name="stage" value="has_sales_but_tired">
+          <div>
+            <div class="option-label">Продаётся, но я уже устала</div>
+            <div class="option-desc">Продажи есть, но в голове и коммуникации хаос, хочется системы и честного теста новых форматов.</div>
+          </div>
+        </label>
+      </div>
+      <div id="error-0" class="error" style="display:none;"></div>
+    </div>
+
+    <!-- ШАГ 2 -->
+    <div class="step" data-step="1">
+      <div class="question-title">2. Что вы хотите увидеть через 14 дней?</div>
+      <div class="question-hint">Не «идеальную картинку», а результат, ради которого вы готовы поработать.</div>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="goal" value="clarity">
+          <div>
+            <div class="option-label">Чётко понимать, что я продаю и кому</div>
+            <div class="option-desc">Без чувства, что надо срочно «перезагрузить себя».</div> 
+          </div>
+        </label>
+        <label class="option">
+          <input type="radio" name="goal" value="first_reactions">
+          <div>
+            <div class="option-label">Увидеть первые живые отклики на продукт</div>
+            <div class="option-desc">Без больших запусков и рекламы, просто честный тест.</div>
+          </div>
+        </label>
+        <label class="option">
+          <input type="radio" name="goal" value="system">
+          <div>
+            <div class="option-label">Собрать систему точек касания</div>
+            <div class="option-desc">Чтобы не тащить продажи на вдохновении и «повезёт / не повезёт».</div>
+          </div>
+        </label>
+      </div>
+      <div id="error-1" class="error" style="display:none;"></div>
+    </div>
+
+    <!-- ШАГ 3 -->
+    <div class="step" data-step="2">
+      <div class="question-title">3. Что сейчас больше всего выматывает?</div>
+      <div class="question-hint">Можно выбрать только один вариант — тот, который отзывается сильнее всего.</div>
+      <div class="options">
+        <label class="option">
+          <input type="radio" name="pain" value="no_clarity">
+          <div>
+            <div class="option-label">Меня бесит, что люди «не понимают, чем я занимаюсь»</div>
+            <div class="option-desc">Каждый раз приходится заново объяснять, и всё равно остаётся туман.</div>
+          </div>
+        </label>
+        <label class="option">
+          <input type="radio" name="pain" value="no_response">
+          <div>
+            <div class="option-label">Я что-то делаю, но отклика мало</div>
+            <div class="option-desc">Пишу посты/сторис, выхожу в эфиры — и тишина, максимум лайки из вежливости.</div>
+          </div>
+        </label>
+        <label class="option">
+          <input type="radio" name="pain" value="burnout">
+          <div>
+            <div class="option-label">Устала «искать себя» и боюсь ошибиться</div>
+            <div class="option-desc">Кажется, что любой шаг может быть «не тем», и я застряла в сомнениях.</div>
+          </div>
+        </label>
+      </div>
+      <div id="error-2" class="error" style="display:none;"></div>
+    </div>
+
+    <!-- ШАГ 4 -->
+    <div class="step" data-step="3">
+      <div class="question-title">4. Одной фразой: что вы сейчас продаёте?</div>
+      <div class="question-hint">Можно коряво. Можно честно. Можно так, как вы реально говорите людям.</div>
+      <textarea id="pitch" placeholder="Например: «Помогаю экспертам перестать писать посты в пустоту и собрать нормальные продажи без марафонов»"></textarea>
+      <div class="small">
+        Если не знаете, что написать — так и напишите: «Я не понимаю, что я продаю». Это тоже ответ.
+      </div>
+    </div>
+
+    <!-- РЕЗУЛЬТАТ -->
+    <div class="step" data-step="4">
+      <div id="result-block" class="result-block">
+        <div class="result-title">Ваш честный профиль загружается…</div>
+        <div class="result-text">Секунду, собираю смыслы из ваших ответов.</div>
+      </div>
+
+      <div class="copy-block">
+        <label for="summary">Текст, который можно скопировать и отправить Марине:</label>
+        <textarea id="summary" readonly></textarea>
+        <div class="copy-row">
+          <button class="btn btn-secondary" type="button" onclick="copySummary()">
+            Скопировать текст
+          </button>
+          <a class="btn btn-primary link-cta" href="https://t.me/promt_sos" target="_blank" rel="noopener"> 
+            Написать Марине в Telegram
+          </a>
+        </div>
+        <div class="small">
+          Вставьте этот текст в сообщение — так Марина сразу увидит вашу точку А и не будет мучить вас лишними вопросами.
+        </div>
+      </div>
+    </div>
+
+    <!-- Навигация -->
+    <div class="nav">
+      <button class="btn btn-secondary" type="button" id="prevBtn" onclick="prevStep()" disabled>
+        ← Назад
+      </button>
+      <div class="step-counter" id="stepCounter">Шаг 1 из 4</div>
+      <button class="btn btn-primary" type="button" id="nextBtn" onclick="nextStep()">
+        Дальше →
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    let currentStep = 0;
+    const steps = document.querySelectorAll('.step');
+    const progressEl = document.getElementById('progress');
+    const stepCounterEl = document.getElementById('stepCounter');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    const answers = {
+      stage: null,
+      goal: null,
+      pain: null,
+      pitch: ''
+    };
+
+    function showStep(index) {
+      steps.forEach((step, i) => {
+        step.classList.toggle('active', i === index);
+      });
+
+      currentStep = index;
+
+      const totalScreens = 4; // 0..3 — вопросы
+      const progressPercent = Math.min((currentStep) / totalScreens * 100, 100);
+      progressEl.style.width = progressPercent + '%';
+
+      if (currentStep <= totalScreens - 1) {
+        stepCounterEl.textContent = 'Шаг ' + (currentStep + 1) + ' из ' + totalScreens;
+      } else {
+        stepCounterEl.textContent = 'Результат';
+      }
+
+      prevBtn.disabled = currentStep === 0;
+      nextBtn.textContent = currentStep >= steps.length - 2 ? 'Показать результат' : 'Дальше →';
+    }
+
+    function validateStep(index) {
+      const errorEl = document.getElementById('error-' + index);
+      if (errorEl) {
+        errorEl.style.display = 'none';
+        errorEl.textContent = '';
+      }
+
+      if (index === 0) {
+        const value = getCheckedValue('stage');
+        if (!value) {
+          showError(index, 'Выберите один из вариантов.');
+          return false;
+        }
+        answers.stage = value;
+      }
+
+      if (index === 1) {
+        const value = getCheckedValue('goal');
+        if (!value) {
+          showError(index, 'Нужно выбрать то, что вам действительно важно.');
+          return false;
+        }
+        answers.goal = value;
+      }
+
+      if (index === 2) {
+        const value = getCheckedValue('pain');
+        if (!value) {
+          showError(index, 'Выберите то, что выматывает сильнее всего.');
+          return false;
+        }
+        answers.pain = value;
+      }
+
+      if (index === 3) {
+        const pitchEl = document.getElementById('pitch');
+        answers.pitch = (pitchEl.value || '').trim();
+      }
+
+      return true;
+    }
+
+    function getCheckedValue(name) {
+      const checked = document.querySelector('input[name="' + name + '"]:checked');
+      return checked ? checked.value : null;
+    }
+
+    function showError(index, text) {
+      const errorEl = document.getElementById('error-' + index);
+      if (!errorEl) return;
+      errorEl.textContent = text;
+      errorEl.style.display = 'block';
+    }
+
+    function nextStep() {
+      if (!validateStep(currentStep)) return;
+
+      if (currentStep < steps.length - 1) {
+        const nextIndex = currentStep + 1;
+
+        if (nextIndex === steps.length - 1) {
+          buildResult();
+        }
+
+        showStep(nextIndex);
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        showStep(currentStep - 1);
+      }
+    }
+
+    function buildResult() {
+      const resultBlock = document.getElementById('result-block');
+      const summaryEl = document.getElementById('summary');
+
+      const profile = buildProfileText();
+      const summaryText = buildSummaryText(profile);
+
+      resultBlock.innerHTML = profile;
+      summaryEl.value = summaryText;
+    }
+
+    function buildProfileText() {
+      let title = '';
+      let text = '';
+      let tagline = '';
+
+      // stage
+      if (answers.stage === 'no_product') {
+        title = 'Вы не «теряетесь», вы на этапе честного выбора.';
+        text += 'Сейчас у вас нет чёткого продукта, хотя опыт и навыки есть. '
+          + 'Это не провал, а этап, когда важно перестать бесконечно «искать себя» и собрать то, '
+          + 'что реально можно тестировать на живых людях.';
+        tagline = 'Мой Генератор продаж за 14 дней поможет выбрать формат и увидеть, что точно не ваше — без годовых метаний.';
+      } else if (answers.stage === 'has_product_no_sales') {
+        title = 'Продукт есть, а продажи ведут себя как интроверт.';
+        text += 'Ваш продукт уже существует, но людям сложно понять, что именно вы делаете и почему это им нужно. '
+          + 'Здесь обычно тонут смыслы, формулировки и точки касания.';
+        tagline = 'Как раз под такие случаи и собран Генератор продаж за 14 дней: карта из 20–40 точек касания вместо надежды на чудо-пост.';
+      } else if (answers.stage === 'has_sales_but_tired') {
+        title = 'Продажи есть, но система просит о помощи.';
+        text += 'Вы уже умеете продавать, но опираетесь на энергию, личный ресурс и импровизацию. '
+          + 'Это выматывает и не даёт ощущения опоры.';
+        tagline = 'Генератор продаж за 14 дней нужен вам как структура: карта касаний, тесты форматов и честный взгляд на то, что оставить, а от чего отказаться.';
+      }
+
+      // goal
+      if (answers.goal === 'clarity') {
+        text += ' Ваша главная потребность сейчас — ясность: что именно вы продаёте и кому. '
+          + 'Это база, без которой любые маркетинговые фокусы не работают.';
+      } else if (answers.goal === 'first_reactions') {
+        text += ' Сейчас вам важны первые живые отклики, а не красивые отчёты. '
+          + 'Вы хотите увидеть людей, которые реально реагируют на ваше предложение.';
+      } else if (answers.goal === 'system') {
+        text += ' Вы хотите не разовый всплеск, а систему, которая будет работать и в те дни, когда нет вдохновения выходить в сторис.';
+      }
+
+      // pain
+      if (answers.pain === 'no_clarity') {
+        text += ' Больше всего выматывает ощущение, что вас не считывают: '
+          + 'каждый раз приходится объяснять себя с нуля.';
+      } else if (answers.pain === 'no_response') {
+        text += ' Вас утомляет отсутствие отклика: вы что-то делаете, но в ответ — максимум вежливые реакции.';
+      } else if (answers.pain === 'burnout') {
+        text += ' Сильнее всего давит страх ошибиться: будто любой шаг может оказаться «не тем», и проще зависнуть в сомнениях.';
+      }
+
+      let pitchPart = '';
+      if (answers.pitch && answers.pitch.length > 0) {
+        pitchPart = '<div class="result-note">Как вы сами сейчас описываете свой продукт: '
+          + '<br><strong>«' + escapeHtml(answers.pitch) + '»</strong></div>';
+      } else {
+        pitchPart = '<div class="result-note">Вы не сформулировали фразу про продукт — это тоже честный сигнал. '
+          + 'С этим мы как раз работаем в первых шагах Генератора.</div>';
+      }
+
+      const html =
+        '<div class="result-title">' + title + '</div>' +
+        '<div class="result-text">' + text + '</div>' +
+        '<div class="result-tagline">' + tagline + '</div>' +
+        pitchPart;
+
+      return html;
+    }
+
+    function buildSummaryText(profileHtml) {
+      let stageText = '';
+      if (answers.stage === 'no_product') {
+        stageText = 'Сейчас у меня нет чёткого формата продукта, но есть опыт и навыки. Я застряла между «ищу себя» и желанием наконец что-то протестировать в реальности.';
+      } else if (answers.stage === 'has_product_no_sales') {
+        stageText = 'У меня есть продукт, но людям сложно понять, что именно я делаю и почему это им нужно. Продаж мало.';
+      } else if (answers.stage === 'has_sales_but_tired') {
+        stageText = 'У меня есть продажи, но они завязаны на мою энергию и хаотичные действия. Хочу систему и опору.';
+      }
+
+      let goalText = '';
+      if (answers.goal === 'clarity') {
+        goalText = 'Через 14 дней хочу чётко понимать, что я продаю, кому и какими словами.';
+      } else if (answers.goal === 'first_reactions') {
+        goalText = 'Через 14 дней хочу увидеть первые живые отклики на продукт без больших запусков и рекламы.';
+      } else if (answers.goal === 'system') {
+        goalText = 'Через 14 дней хочу собрать понятную систему точек касания, а не жить на вдохновении.';
+      }
+
+      let painText = '';
+      if (answers.pain === 'no_clarity') {
+        painText = 'Сильнее всего меня выматывает то, что люди не считывают, чем я занимаюсь — каждый раз приходится объяснять себя заново.';
+      } else if (answers.pain === 'no_response') {
+        painText = 'Меня утомляет, что я что-то делаю (контент, эфиры, активности), но отклика мало.';
+      } else if (answers.pain === 'burnout') {
+        painText = 'Я устала «искать себя» и боюсь сделать «не тот» шаг, из-за этого застреваю в сомнениях.';
+      }
+
+      const pitchText = answers.pitch && answers.pitch.length > 0
+        ? 'Сейчас я описываю свой продукт так: «' + answers.pitch + '».'
+        : 'Сейчас мне сложно честно описать, что именно я продаю — это тоже важный сигнал.';
+
+      const summary =
+        'Марина, я прошла твою мини-игру «Честный генератор продаж».\n\n' +
+        'Моя точка А:\n' +
+        '— ' + stageText + '\n' +
+        '— ' + painText + '\n\n' +
+        'То, чего я хочу:\n' +
+        '— ' + goalText + '\n\n' +
+        pitchText + '\n\n' +
+        'Хочу понять, подойдёт ли мне твой Генератор продаж за 14 дней и что мы можем собрать из моей ситуации.';
+
+      return summary;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function copySummary() {
+      const summaryEl = document.getElementById('summary');
+      summaryEl.select();
+      summaryEl.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+      } catch (e) {
+        // если не сработало — ничего страшного
+      }
+    }
+
+    // Инициализация
+    showStep(0);
+  </script>
+</body>
+</html>
